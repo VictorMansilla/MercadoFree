@@ -40,34 +40,16 @@ def Agreagar_Producto(Nombre_Producto,Precio_Producto,Descripcion_Producto):
 #Editar_Producto()
 
 """ def Editar_Producto():
-    Preoducto = producto()
     DB = Coneaxion_a_DB()
-    #Printear_Todos_los_Datos_del_DB()
-    #NOMBRE_PRODUCTO = input('Ingrese el nombre de producto a editar:\n')
-    #Elegir_Editar=input('Deseas editar el PRECIO o la DESCRIPCION:\n')
-    try:
-        if Elegir_Editar.upper()=='PRECIO':
-            NUEVO_VALOR=input('Ingrese el nuevo valor:\n')
-            DB.cursor.execute(f"UPDATE Productos set PRECIO={NUEVO_VALOR} Where PRODUCTO_NOMBRE like '{NOMBRE_PRODUCTO}'")
-        elif Elegir_Editar.upper()=='DESCRIPCION':
-            NUEVO_DESCRIPCION=str(input('Ingrese el nueva descripción:\n'))
-            DB.cursor.execute(f"UPDATE Productos set DESCRIPCION='{NUEVO_DESCRIPCION}' Where PRODUCTO_NOMBRE like '{NOMBRE_PRODUCTO}'")
-        DB.cerrar()
-    except:
-        print('No se encontro producto') """
-
+    DB.cursor.execute(f'UPDATE FROM Productos Where PRECIO like "{ID_Producto_a_Borrar}"')
+    DB.cerrar()
+"""
 #Borrar_Producto()
 
-def Borrar_Producto():
-    Preoducto = producto()
+def Borrar_Producto(ID_Producto_a_Borrar):
     DB = Coneaxion_a_DB()
-    #Printear_Todos_los_Datos_del_DB()
-    #NOMBRE_PRODUCTO_ELIMINAR = input('Ingrese el nombre de producto a eliminar:\n')
-    try:
-        DB.cursor.execute(f'DELETE FROM Productos Where PRODUCTO_NOMBRE like "{Preoducto.Nombre}"')
-        DB.cerrar()
-    except:
-        print('No hay productoq ue borrar')
+    DB.cursor.execute(f'DELETE FROM Productos Where ID like "{ID_Producto_a_Borrar}"')
+    DB.cerrar()
 
 """ elegir = input('ingresar acción: ')
 if elegir=='a1':
