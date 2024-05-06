@@ -1,4 +1,5 @@
 import sqlite3
+from fastapi import HTTPException
 
 Creation_Base_Data = ('''CREATE TABLE IF NOT EXISTS Productos(
                          ID INTEGER,
@@ -7,12 +8,6 @@ Creation_Base_Data = ('''CREATE TABLE IF NOT EXISTS Productos(
                          DESCRIPCION VARCHAR(500),
                          PRIMARY KEY(ID AUTOINCREMENT)
 )''')
-
-#Cursor_de_Conect.execute("INSERT OR IGNORE INTO Productos (PRODUCTO_NOMBRE,PRECIO,DESCRIPCION) VALUES('Camisa',25,'Muy buena calidad')")
-
-#Cursor_de_Conect.execute("UPDATE Tabla_Completa SET NOMBRE='Juan' WHERE DNI=00000002")
-
-#Cursor_de_Conect.execute("DELETE FROM Tabla_Completa WHERE DNI=1158965")
 
 class producto:
     def __init__(self,Nombre,Precio,Descripcion):
@@ -37,18 +32,10 @@ def Printear_Todos_los_Datos_del_DB():
 
 #Agreagar_Producto()
 
-def Agreagar_Producto():
-    Preoducto = producto()
+def Agreagar_Producto(Nombre_Producto,Precio_Producto,Descripcion_Producto):
     DB = Coneaxion_a_DB()
-    #Printear_Todos_los_Datos_del_DB()
-    try:
-        #NOMBRE=input('Ingrese el nombre:\n')
-        #PRECIO=float(input('Ingrese su precio:\n'))
-        #DESCRIPCION=input('Ingrese una descripción del producto:\n')
-        DB.cursor.execute(f"""INSERT OR IGNORE INTO Productos (PRODUCTO_NOMBRE,PRECIO,DESCRIPCION) VALUES ('{Preoducto.Nombre}','{Preoducto.Precio}','{Preoducto.Descripcion}')""")
-        DB.cerrar()
-    except:
-        return 'Hubo un error'
+    DB.cursor.execute(f"""INSERT OR IGNORE INTO Productos (PRODUCTO_NOMBRE,PRECIO,DESCRIPCION) VALUES ('{Nombre_Producto}','{Precio_Producto}','{Descripcion_Producto}')""")
+    DB.cerrar()
 
 #Editar_Producto()
 
@@ -89,3 +76,6 @@ elif elegir=='a2':
     Editar_Producto()
 else:
     Borrar_Producto() """
+DB = Coneaxion_a_DB()
+DB.cursor.execute(f'DELETE FROM Productos Where ID like "{16}"')
+DB.cerrar()
