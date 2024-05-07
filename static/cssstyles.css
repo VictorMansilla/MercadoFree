@@ -1,0 +1,12 @@
+body{
+    background-color: #F3EEEA;
+    color: #776B5D;
+}
+
+main{
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}

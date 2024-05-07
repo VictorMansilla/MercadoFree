@@ -57,7 +57,7 @@ if elegir=='a1':
 elif elegir=='a2':
     Editar_Producto()
 else:
-    Borrar_Producto() """
+    Borrar_Producto() """   
 DB = Coneaxion_a_DB()
 DB.cursor.execute(f'DELETE FROM Productos Where ID like "{16}"')
 DB.cerrar()

@@ -1,18 +1,13 @@
 from fastapi import FastAPI, Request, Form
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from TWO import *
-
 from typing import Annotated, Union
-
-from pydantic import BaseModel
-
-class Item(BaseModel):
-    name: str
-    price: float
-    is_offer: Union[bool, None] = None
+#from pydantic import BaseModel
 
 app_de_FastApi = FastAPI()
+app_de_FastApi.mount("/static",StaticFiles(directory="static"),name="static")
 
 Ninja=Jinja2Templates(directory="Templates")
 
@@ -24,7 +19,7 @@ def root(request:Request):
 def Dashboard(request:Request):
     return Ninja.TemplateResponse("dashboard.html", {"request": request})
 
-@app_de_FastApi.post("/Productoss")
+@app_de_FastApi.post("/Productoss", response_class=RedirectResponse)
 async def Ingreso_Producto(Nombre_Producto:Annotated[str,Form()],Precio_Producto:Annotated[int,Form()],Descripcion_Producto:Annotated[str,Form()]):
     Agreagar_Producto(Nombre_Producto,Precio_Producto,Descripcion_Producto)
     return RedirectResponse("/Productos", status_code=303)
@@ -33,11 +28,7 @@ async def Ingreso_Producto(Nombre_Producto:Annotated[str,Form()],Precio_Producto
 def Mostrar_Productos(request:Request):
     return Ninja.TemplateResponse("Productos.html",{"request":request, "Datos":Printear_Todos_los_Datos_del_DB()})
 
-
-""" @app_de_FastApi.get("/items/{item_id}")
-def read_item(item_id: int, q: Union[str, None] = None):
-    return {"item_id": item_id, "q": q}
-
-@app_de_FastApi.put("/items/{item_id}")
-def update_item(item_id: int, item: Item):
-    return {"item_name": item.name, "item_id": item_id} """
+@app_de_FastApi.delete("/Producto_Eliminar", response_class=RedirectResponse)
+async def Producto_Eliminar(ID:Annotated[int,Form()]):
+    Borrar_Producto(ID)
+    return RedirectResponse("/Productos", status_code=303)
