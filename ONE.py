@@ -29,6 +29,6 @@ def Mostrar_Productos(request:Request):
     return Ninja.TemplateResponse("Productos.html",{"request":request, "Datos":Printear_Todos_los_Datos_del_DB()})
 
 @app_de_FastApi.delete("/Producto_Eliminar", response_class=RedirectResponse)
-async def Producto_Eliminar(ID:Annotated[int,Form()]):
+def Producto_Eliminar(ID:int):
     Borrar_Producto(ID)
     return RedirectResponse("/Productos", status_code=303)

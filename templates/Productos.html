@@ -8,11 +8,14 @@
 </head>
 <body>
     <H1>Base de Datos</H1>
+    <H3> 
+        <a href="/">Inicio</a>
+    </H3>
     <div>
         {% for dato in Datos %}
             <article>
                 <h2>{{ dato }}</h2>
-                <a href="/Producto_Eliminar?">Eliminar</a>
+                <a href="/Producto_Eliminar?ID={{dato[0]}}">Eliminar</a>
             </article>
         {% endfor %}
     </div>
