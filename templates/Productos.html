@@ -15,10 +15,12 @@
         {% for dato in Datos %}
             <article>
                 <h2>{{ dato }}</h2>
-                <a href="/Producto_Eliminar?ID={{dato[0]}}">Eliminar</a>
+                <div>
+                    <a href="/Producto_Eliminar?ID={{dato[0]}}">Eliminar</a>
+                    <a href="/Editar_Producto?ID={{dato[0]}}">Editar</a>
+                </div>
             </article>
         {% endfor %}
     </div>
-    
 </body>
 </html>
