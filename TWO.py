@@ -33,7 +33,7 @@ def Printear_Todos_los_Datos_del_DB():
 
 def Agreagar_Producto(Nombre_Producto,Precio_Producto,Descripcion_Producto):
     DB = Coneaxion_a_DB()
-    DB.cursor.execute(f"""INSERT OR IGNORE INTO Productos (PRODUCTO_NOMBRE,PRECIO,DESCRIPCION) VALUES ('{Nombre_Producto}','{Precio_Producto}','{Descripcion_Producto}')""")
+    DB.cursor.execute(f'INSERT OR IGNORE INTO Productos (PRODUCTO_NOMBRE,PRECIO,DESCRIPCION) VALUES ("{Nombre_Producto}","{Precio_Producto}","{Descripcion_Producto}")')
     DB.cerrar()
 
 #Borrar el producto seleccionado
@@ -49,3 +49,10 @@ def Editar_Producto(ID, Nombre_Editado, Precio_Editado, Descripcion_Editada):
     DB = Coneaxion_a_DB()
     DB.cursor.execute(f'UPDATE Productos SET PRODUCTO_NOMBRE="{Nombre_Editado}", PRECIO={Precio_Editado}, DESCRIPCION="{Descripcion_Editada}" WHERE ID="{ID}"')
     DB.cerrar()
+
+#Buscar los productos
+
+def Buscar_Producto(Buscar_Producto_s):
+    DB = Coneaxion_a_DB()
+    DB.cursor.execute(f"SELECT * FROM Productos WHERE PRODUCTO_NOMBRE LIKE '{Buscar_Producto_s}'")
+    return DB.cursor.fetchall()

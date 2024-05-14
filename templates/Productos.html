@@ -7,10 +7,22 @@
     <link rel="stylesheet" href="{{ url_for('static', path='Productos.css') }}">
 </head>
 <body>
-    <H1>Base de Datos</H1>
-    <H3> 
-        <a href="/">Inicio</a>
-    </H3>
+    <div>
+        <H1>Base de Datos</H1>
+        <H3> 
+            <a href="/">Inicio</a>
+        </H3>
+    </div>   
+     
+    <div>
+        <form action="/Lista_Buscador" method="post">
+            <div>
+                <input type="search" name="Buscar_Producto_s" placeholder="Buscar Producto"/>
+                <input type="submit" class="search__btn" value="Buscar"/>
+            </div>
+        </form>
+    </div>
+
     <div>
         {% for dato in Datos %}
             <article>
