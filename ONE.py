@@ -1,9 +1,10 @@
-from fastapi import FastAPI, Request, Form
+from fastapi import FastAPI, Request, Form, HTTPException
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from TWO import *
 from typing import Annotated
+
 
 app_de_FastApi = FastAPI()
 app_de_FastApi.mount("/static",StaticFiles(directory="static"),name="static")

@@ -65,15 +65,16 @@ def Buscar_Producto(Buscar_Producto_s):
 
 #____________________________________________________________ Sección de usuarios ____________________________________________________________
 
-class Coneaxion_a_Usuarios(Coneaxion_a_DB_Productos):
+class Coneaxion_a_Usuarios():
     def __init__(self):
         self.base_datos_usuarios = 'C:\\Users\\User\\Desktop\\tarea\\PYtrabajo\\BANGA\\Base_Datos_Usuarios.db'
         self.conexion = sqlite3.connect(self.base_datos_usuarios)
         self.conexion.execute(Creation_Base_Data_Usuarios)
         self.cursor = self.conexion.cursor()
     
-    def cerrar():
-        return super().cerrar()
+    def cerrar(self):
+        self.conexion.commit()
+        self.conexion.close()
     
 #Agregar un nuevo usuario (Registro)
 
@@ -81,10 +82,11 @@ def Agreagar_Usuario(Nombre_Usuario, Contraseña_Usuario):
     DB = Coneaxion_a_Usuarios()
     DB.cursor.execute(f'SELECT 1 FROM Usuarios WHERE USUARIO_NOMBRE="{Nombre_Usuario}" LIMIT 1')
     result = DB.cursor.fetchone()
-    if result == False:
+    if result == None:
         DB.cursor.execute(f'INSERT OR IGNORE INTO Usuarios (USUARIO_NOMBRE,USUARIO_CONTRASEÑA) VALUES ("{Nombre_Usuario}","{Contraseña_Usuario}")')
         DB.cerrar()
         return True
+    else:return False
 
 #Verificar usuario (Logeo)
 
@@ -95,3 +97,8 @@ def Validar_Usuario(Nombre_Usuario, Contraseña_Usuario):
     if Verificar:
         return True
     else:return False
+
+
+""" DB = Coneaxion_a_Usuarios()
+DB.cursor.execute(f'DELETE FROM Usuarios Where USUARIO_NOMBRE like "{"victor"}"')
+DB.cerrar() """
