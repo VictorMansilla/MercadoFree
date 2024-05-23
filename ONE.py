@@ -1,10 +1,9 @@
-from fastapi import FastAPI, Request, Form, HTTPException
+from fastapi import FastAPI, Request, Form
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from TWO import *
 from typing import Annotated
-
 
 app_de_FastApi = FastAPI()
 app_de_FastApi.mount("/static",StaticFiles(directory="static"),name="static")
@@ -56,7 +55,7 @@ async def Ingreso_Producto(Nombre_Producto:Annotated[str,Form()],Precio_Producto
     return RedirectResponse("/Productos", status_code=303)
 
 @app_de_FastApi.get("/Producto_Eliminar", response_class=RedirectResponse)
-def Producto_Eliminar(ID:int):
+async def Producto_Eliminar(ID:int):
     Borrar_Producto(ID)
     return RedirectResponse("/Productos", status_code=303)
 
@@ -72,3 +71,7 @@ def Producto_Editado(ID:Annotated[int,Form()], Nombre_Editado:Annotated[str,Form
 @app_de_FastApi.post("/Lista_Buscador", response_class=HTMLResponse)
 def Buscar_Producto_en_DB(request:Request,Buscar_Producto_s:Annotated[str,Form()]):
     return Ninja.TemplateResponse("Productos.html",{"request":request, "Datos":Buscar_Producto(Buscar_Producto_s)})
+
+@app_de_FastApi.get("/Producto", response_class=HTMLResponse)
+def Producto(ID, request:Request):
+    return Ninja.TemplateResponse("Producto.html",{"request":request, "ID": ID , "datos":Printear_un_Producto(ID)})

@@ -26,10 +26,12 @@
     <div>
         {% for dato in Datos %}
             <article>
-                <h2>{{ dato }}</h2>
+                <h2>{{ dato[1] }} {{ dato[2] }}</h2>
                 <div>
                     <a href="/Producto_Eliminar?ID={{dato[0]}}">Eliminar</a>
                     <a href="/Editar_Producto?ID={{dato[0]}}">Editar</a>
+                    <a href="/Producto?ID={{dato[0]}}">Producto</a>
+                    <input type="checkbox" name="checkbox" id="checkbox">
                 </div>
             </article>
         {% endfor %}

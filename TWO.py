@@ -35,6 +35,11 @@ def Printear_Todos_los_Datos_del_DB():
     DB.cursor.execute("SELECT * FROM Productos")
     return DB.cursor.fetchall()
 
+def Printear_un_Producto(ID):
+    DB = Coneaxion_a_DB_Productos()
+    DB.cursor.execute(f"SELECT * FROM Productos WHERE ID LIKE '{ID}'")
+    return DB.cursor.fetchall()
+
 #Agreagar un nuevo producto
 
 def Agreagar_Producto(Nombre_Producto,Precio_Producto,Descripcion_Producto):

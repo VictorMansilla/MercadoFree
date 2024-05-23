@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ ID }}</title>
+</head>
+
+<body>
+    {% for dato in datos %}
+        <div>
+            <article>
+                <h2>{{ dato[1] }}</h2>
+                <h2>{{ dato[2] }}</h2>
+                <h2>{{ dato[3] }}</h2>
+            </article>
+        </div>
+    {% endfor %}
+</body>
+
+</html>
