@@ -2,13 +2,15 @@ from fastapi import FastAPI, Request, Form
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
-from TWO import *
+from Database import *
 from typing import Annotated
 
 app_de_FastApi = FastAPI()
 app_de_FastApi.mount("/static",StaticFiles(directory="static"),name="static")
 
 Ninja=Jinja2Templates(directory="Templates")
+
+lista_carrito=[] #Lista de productos demandados por el usuario
 
 #Registro de usuario ____________________________________________________________________________________________________________________________
 
@@ -75,3 +77,17 @@ def Buscar_Producto_en_DB(request:Request,Buscar_Producto_s:Annotated[str,Form()
 @app_de_FastApi.get("/Producto", response_class=HTMLResponse)
 def Producto(ID, request:Request):
     return Ninja.TemplateResponse("Producto.html",{"request":request, "ID": ID , "datos":Printear_un_Producto(ID)})
+
+@app_de_FastApi.post("/Carrito")
+def carrito(ID:Annotated[int,Form()]):
+    lista_carrito.append(ID)
+    return RedirectResponse("/Productos", status_code=303)
+
+@app_de_FastApi.get("/Carritototal")
+def Total_Carrito():
+    total = 0
+    for x in lista_carrito:
+        P:str = Printear_un_Producto(x)
+        P=[list(tupla) for tupla in P]
+        total+=P[0][2]
+    return f"{lista_carrito}", f"{total}"

@@ -15,6 +15,13 @@
                 <h2>{{ dato[3] }}</h2>
             </article>
         </div>
+        <div>
+            <form action="/Carrito" method="post">
+                <input type="hidden" name="ID" value="{{ ID }}">
+                <input type="submit" name="Comprar_ahora" value="Comprar ahora">
+                <input type="submit" name="Agregar_carrito" value="Agregar al carrito">
+            </form>
+        </div>
     {% endfor %}
 </body>
 
