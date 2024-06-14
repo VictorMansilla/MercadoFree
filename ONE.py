@@ -1,93 +1,217 @@
-from fastapi import FastAPI, Request, Form
-from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.staticfiles import StaticFiles
-from Database import *
-from typing import Annotated
+from fastapi import FastAPI, HTTPException
+import jwt
+
+from database.Database_Product import Printear_Todos_los_Datos_del_DB, Printear_un_Producto, Agreagar_Producto, Borrar_Producto, Editar_Producto, Buscar_Producto, Printear_Mis_Productos
+from database.Database_User import  Agreagar_Usuario, Validar_Usuario, Editar_Usuario, Eliminar_Usuario
+from api.encode import Token,second_exp,Clave_Secreta
 
 app_de_FastApi = FastAPI()
-app_de_FastApi.mount("/static",StaticFiles(directory="static"),name="static")
-
-Ninja=Jinja2Templates(directory="Templates")
 
 lista_carrito=[] #Lista de productos demandados por el usuario
 
 #Registro de usuario ____________________________________________________________________________________________________________________________
 
-@app_de_FastApi.get("/Register", response_class=HTMLResponse)
-def Register(request:Request):
-    return Ninja.TemplateResponse("Register.html", {"request":request})
-
-@app_de_FastApi.post("/RegisterUser",response_class=RedirectResponse)
-def Register_User(UserName:Annotated[str,Form()], PassWord:Annotated[str,Form()], PassWord_Confirm:Annotated[str,Form()]):
+@app_de_FastApi.post("/Register")
+def Register_User(UserName:str, PassWord:str, PassWord_Confirm:str, Email=None):
     if PassWord == PassWord_Confirm:
-        if Agreagar_Usuario(UserName, PassWord):
-            return RedirectResponse("/", status_code=303)
+        if Agreagar_Usuario(UserName, PassWord, Email):
+            raise HTTPException(
+            status_code=201,
+            detail="Usuario ingresado",
+            headers={"WWW-Authenticate": "Bearer"},)
         else:
-            return RedirectResponse("/Register", status_code=303)
+            raise HTTPException(
+            status_code=404,
+            detail="El usuario ya está registrado",
+            headers={"WWW-Authenticate": "Bearer"},)
     else:
-        return RedirectResponse("/Register", status_code=303)
+        raise HTTPException(
+            status_code=400,
+            detail="Las contraseñas no coinciden",
+            headers={"WWW-Authenticate": "Bearer"},)
 
 #Logeo de usuario ____________________________________________________________________________________________________________________________
 
-@app_de_FastApi.get("/Login", response_class=HTMLResponse)
-def Login(request:Request):
-    return Ninja.TemplateResponse("Login.html", {"request":request})
-
-@app_de_FastApi.post("/LoginUser",response_class=RedirectResponse)
-def Login_User(UserName:Annotated[str,Form()], PassWord:Annotated[str,Form()]):
-    if Validar_Usuario(UserName, PassWord) == True:
-        return RedirectResponse("/", status_code=303)
+@app_de_FastApi.get("/Login")
+def Login_User(UserName:str, PassWord:str):
+    if Validar_Usuario(UserName, PassWord):
+        return Token(UserName, second_exp)
     else:
-        return RedirectResponse("/Login", status_code=303)
+        raise HTTPException(
+        status_code=404,
+        detail="Usuario o contraseña incorrectas",            
+        headers={"WWW-Authenticate": "Bearer"},)
+
+@app_de_FastApi.get("/LogOut")
+def LogOut():
+    headers={"set-cookie": "acces_token=; Max-Age=0"}
+    return headers
+
+#Eliminación de usuario ____________________________________________________________________________________________________________________________
+
+@app_de_FastApi.delete("/DeleteUser")
+def Delete_User(UserName:str, PassWord:str, acces_token):
+    try:
+        decoded_payload = jwt.decode(acces_token, Clave_Secreta, algorithms=['HS256'])
+
+        if Validar_Usuario(UserName, PassWord):
+            Eliminar_Usuario(UserName)
+
+        else:
+            raise HTTPException(
+                status_code=404,
+                detail="Usuario o contraseña incorrectas",            
+                headers={"WWW-Authenticate": "Bearer"},)
+
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(
+            status_code=401,
+            detail="El token ha expirado",
+            headers={"WWW-Authenticate": "Bearer"},)
+
+    except jwt.InvalidTokenError:
+        raise HTTPException(
+            status_code=401,
+            detail="Token inválido",
+            headers={"WWW-Authenticate": "Bearer"},)
+
+#Eliminación de usuario ____________________________________________________________________________________________________________________________
+
+@app_de_FastApi.put("/Editar_Usuario", status_code=201)
+def Usuario_Editar(UserName:str, PassWord:str, acces_token, Email:str|None=None):
+    try:
+        decoded_payload = jwt.decode(acces_token, Clave_Secreta, algorithms=['HS256'])
+
+        if acces_token != None:
+            Editar_Usuario(decoded_payload['Id_Usuario'], UserName, PassWord, Email)
+
+        else:
+            raise HTTPException(
+                status_code = 400,
+                detail="Cookie invalida",
+                headers={"WWW-Authenticate": "Bearer"},)
+
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(
+            status_code=401,
+            detail="El token ha expirado",
+            headers={"WWW-Authenticate": "Bearer"},)
+
+    except jwt.InvalidTokenError:
+        raise HTTPException(
+            status_code=401,
+            detail="Token inválido",
+            headers={"WWW-Authenticate": "Bearer"},)
 
 #MercadoFree ____________________________________________________________________________________________________________________________
 
-@app_de_FastApi.get("/", response_class=HTMLResponse)
-def root(request:Request):
-    return Ninja.TemplateResponse("index.html",{"request":request})
+@app_de_FastApi.get("/Productos")
+def Productos_Mostrar(acces_token:str|None=None):
+    if acces_token == None:
+        raise HTTPException(
+            status_code = 400,
+            detail="Cookie invalida",
+            headers={"WWW-Authenticate": "Bearer"},)
+    else:
+        return Printear_Todos_los_Datos_del_DB()
 
-@app_de_FastApi.get("/Productos", response_class=HTMLResponse)
-def Mostrar_Productos(request:Request):
-    return Ninja.TemplateResponse("Productos.html",{"request":request, "Datos":Printear_Todos_los_Datos_del_DB()})
+@app_de_FastApi.post("/Productos", status_code= 201)
+async def Producto_Ingresar(Nombre_Producto:str, Precio_Producto:int, Descripcion_Producto:str, acces_token:str|None=None):
+    try:
+        decoded_payload = jwt.decode(acces_token, Clave_Secreta, algorithms=['HS256'])
+        print(f'Token decodificado: {decoded_payload}')
+        if acces_token == None:
+            raise HTTPException(
+                status_code = 400,
+                detail="Cookie invalida",
+                headers={"WWW-Authenticate": "Bearer"},)
+        else:
+            Agreagar_Producto(Nombre_Producto,Precio_Producto,Descripcion_Producto, decoded_payload['Id_Usuario'])
 
-@app_de_FastApi.post("/Productoss", response_class=RedirectResponse)
-async def Ingreso_Producto(Nombre_Producto:Annotated[str,Form()],Precio_Producto:Annotated[int,Form()],Descripcion_Producto:Annotated[str,Form()]):
-    Agreagar_Producto(Nombre_Producto,Precio_Producto,Descripcion_Producto)
-    return RedirectResponse("/Productos", status_code=303)
+    except jwt.ExpiredSignatureError:
+        print('El token ha expirado')
+        raise HTTPException(
+            status_code=401,
+            detail="El token ha expirado",
+            headers={"WWW-Authenticate": "Bearer"},)
 
-@app_de_FastApi.get("/Producto_Eliminar", response_class=RedirectResponse)
-async def Producto_Eliminar(ID:int):
-    Borrar_Producto(ID)
-    return RedirectResponse("/Productos", status_code=303)
+    except jwt.InvalidTokenError:
+        print('Token inválido')
+        raise HTTPException(
+            status_code=401,
+            detail="Token inválido",
+            headers={"WWW-Authenticate": "Bearer"},)
 
-@app_de_FastApi.get("/Editar_Producto", response_class=HTMLResponse)
-def Editar_Producto_(ID, request:Request):
-    return Ninja.TemplateResponse("Editar_Producto.html",{"request":request, "ID":ID})
+@app_de_FastApi.delete("/Producto_Eliminar", status_code=204)
+async def Producto_Eliminar(ID:int, acces_token:str|None=None):
+    if acces_token != None:
+        try:
+            decoded_payload = jwt.decode(acces_token, Clave_Secreta, algorithms=['HS256'])
+            print(f'Token decodificado: {decoded_payload}')
+            Borrar_Producto(ID)
 
-@app_de_FastApi.post("/Producto_editado", response_class=RedirectResponse)
-def Producto_Editado(ID:Annotated[int,Form()], Nombre_Editado:Annotated[str,Form()],Precio_Editado:Annotated[int,Form()],Descripcion_Editada:Annotated[str,Form()]):
-    Editar_Producto(ID, Nombre_Editado, Precio_Editado, Descripcion_Editada)
-    return RedirectResponse("/Productos", status_code=303)
+        except jwt.ExpiredSignatureError:
+            raise HTTPException(
+                status_code=401,
+                detail="El token ha expirado",
+                headers={"WWW-Authenticate": "Bearer"},)
 
-@app_de_FastApi.post("/Lista_Buscador", response_class=HTMLResponse)
-def Buscar_Producto_en_DB(request:Request,Buscar_Producto_s:Annotated[str,Form()]):
-    return Ninja.TemplateResponse("Productos.html",{"request":request, "Datos":Buscar_Producto(Buscar_Producto_s)})
+        except jwt.InvalidTokenError:
+            raise HTTPException(
+                status_code=401,
+                detail="Token inválido",
+                headers={"WWW-Authenticate": "Bearer"},)
+    else:
+        raise HTTPException(
+            status_code = 400,
+            detail="Cookie invalida",
+            headers={"WWW-Authenticate": "Bearer"},)
 
-@app_de_FastApi.get("/Producto", response_class=HTMLResponse)
-def Producto(ID, request:Request):
-    return Ninja.TemplateResponse("Producto.html",{"request":request, "ID": ID , "datos":Printear_un_Producto(ID)})
+@app_de_FastApi.put("/Editar_Producto")
+def Producto_Editar(ID, Nombre_Producto, Precio_Producto, Descripcion_Producto, acces_token):
+    try:
+        decoded_payload = jwt.decode(acces_token, Clave_Secreta, algorithms=['HS256'])
+        if acces_token == None:
+            raise HTTPException(
+                status_code = 400,
+                detail="Cookie invalida",
+                headers={"WWW-Authenticate": "Bearer"},)
+        else:
+            Editar_Producto(ID, Nombre_Producto, Precio_Producto, Descripcion_Producto)
+
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(
+            status_code=401,
+            detail="El token ha expirado",
+            headers={"WWW-Authenticate": "Bearer"},)
+
+    except jwt.InvalidTokenError:
+        raise HTTPException(
+            status_code=401,
+            detail="Token inválido",
+            headers={"WWW-Authenticate": "Bearer"},)
+
+@app_de_FastApi.get("/Lista_Buscador")
+def Buscar_Producto_en_DB(Buscar_Producto_s:str):
+    return Buscar_Producto(Buscar_Producto_s)
+
+@app_de_FastApi.get("/Producto")
+def Producto(ID:int):
+    return Printear_un_Producto(ID)
+
+@app_de_FastApi.get("/MisProductos")
+def MisProductos(acces_token):
+    decoded_payload = jwt.decode(acces_token, Clave_Secreta, algorithms=['HS256'])
+    return Printear_Mis_Productos(decoded_payload['Id_Usuario'])
 
 @app_de_FastApi.post("/Carrito")
-def carrito(ID:Annotated[int,Form()]):
+def carrito(ID:int):
     lista_carrito.append(ID)
-    return RedirectResponse("/Productos", status_code=303)
 
 @app_de_FastApi.get("/Carritototal")
 def Total_Carrito():
     total = 0
     for x in lista_carrito:
         P:str = Printear_un_Producto(x)
-        P=[list(tupla) for tupla in P]
-        total+=P[0][2]
+        total+=P[2]
     return f"{lista_carrito}", f"{total}"
