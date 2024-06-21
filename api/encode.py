@@ -3,12 +3,14 @@ import jwt
 import datetime
 
 
-from database.Database_User import Buscar_Usuario
+from models.Database_User import Buscar_Usuario
 
 
 Clave_Secreta = secrets.token_hex(62)
 
-second_exp = 120
+second_exp = 600
+
+algoritmo = ['HS256']
 
 def Token(Nombre_Usuario, segundos):
     Usuario = Buscar_Usuario(Nombre_Usuario)

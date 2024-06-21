@@ -1,46 +1,46 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 import jwt
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
-from database.Database_Product import Printear_Todos_los_Datos_del_DB, Printear_un_Producto, Agreagar_Producto, Borrar_Producto, Editar_Producto, Buscar_Producto, Printear_Mis_Productos
-from database.Database_User import  Agreagar_Usuario, Validar_Usuario, Editar_Usuario, Eliminar_Usuario
-from api.encode import Token,second_exp,Clave_Secreta
+from models.Database_Product import Printear_Todos_los_Datos_del_DB, Printear_un_Producto, Agreagar_Producto, Borrar_Producto, Editar_Producto, Buscar_Producto, Printear_Mis_Productos
+from models.Database_User import  Agreagar_Usuario, Validar_Usuario, Editar_Usuario, Eliminar_Usuario
+from api.encode import Token,second_exp,Clave_Secreta, algoritmo
+from schemas.USUARIO import USUARIO_BASE, USUARIO_EMAIL
+from schemas.PRODUCTO import PRODUCTO_BASE
 
 app_de_FastApi = FastAPI()
 
 lista_carrito=[] #Lista de productos demandados por el usuario
 
+esquema_oauth2 = OAuth2PasswordBearer(tokenUrl="Login")
+
+def Excepcion(codigo_de_estado : int, detalle : str):
+    raise HTTPException(status_code = codigo_de_estado, detail = detalle)
+
 #Registro de usuario ____________________________________________________________________________________________________________________________
 
-@app_de_FastApi.post("/Register")
-def Register_User(UserName:str, PassWord:str, PassWord_Confirm:str, Email=None):
-    if PassWord == PassWord_Confirm:
-        if Agreagar_Usuario(UserName, PassWord, Email):
-            raise HTTPException(
-            status_code=201,
-            detail="Usuario ingresado",
-            headers={"WWW-Authenticate": "Bearer"},)
+@app_de_FastApi.post("/Register", response_model = USUARIO_BASE)
+def Register_User(Usuario : USUARIO_EMAIL, PassWord_Confirm:str):
+    if Usuario.CONTRASEÑA == PassWord_Confirm:
+        if Agreagar_Usuario(Usuario.NOMBRE, Usuario.CONTRASEÑA):
+            Excepcion(201, "Usuario ingresado")
+        
         else:
-            raise HTTPException(
-            status_code=404,
-            detail="El usuario ya está registrado",
-            headers={"WWW-Authenticate": "Bearer"},)
+            Excepcion(404, "El usuario ya está registrado")
+        
     else:
-        raise HTTPException(
-            status_code=400,
-            detail="Las contraseñas no coinciden",
-            headers={"WWW-Authenticate": "Bearer"},)
-
+        Excepcion(400, "Las contraseñas no coinciden")
+    
 #Logeo de usuario ____________________________________________________________________________________________________________________________
 
-@app_de_FastApi.get("/Login")
-def Login_User(UserName:str, PassWord:str):
-    if Validar_Usuario(UserName, PassWord):
-        return Token(UserName, second_exp)
+@app_de_FastApi.post("/Login")   ##########################################################
+def Login_User(Oauth : OAuth2PasswordRequestForm = Depends()):
+    if Validar_Usuario(Oauth.username, Oauth.password):
+        acces_token = Token(Oauth.username, second_exp)
+        return {"access_token": acces_token, "token_type": "bearer"}
+
     else:
-        raise HTTPException(
-        status_code=404,
-        detail="Usuario o contraseña incorrectas",            
-        headers={"WWW-Authenticate": "Bearer"},)
+        Excepcion(404, "Usuario o contraseña incorrectas")
 
 @app_de_FastApi.get("/LogOut")
 def LogOut():
@@ -49,169 +49,144 @@ def LogOut():
 
 #Eliminación de usuario ____________________________________________________________________________________________________________________________
 
-@app_de_FastApi.delete("/DeleteUser")
-def Delete_User(UserName:str, PassWord:str, acces_token):
+@app_de_FastApi.delete("/DeleteUser")   ##########################################################
+async def Delete_User(Usuario : USUARIO_BASE, acces_token : str = Depends(esquema_oauth2)):
     try:
-        decoded_payload = jwt.decode(acces_token, Clave_Secreta, algorithms=['HS256'])
+        decoded_payload = jwt.decode(acces_token, Clave_Secreta, algorithms=algoritmo)
 
-        if Validar_Usuario(UserName, PassWord):
-            Eliminar_Usuario(UserName)
+        if Validar_Usuario(Usuario.NOMBRE, Usuario.CONTRASEÑA):
+            Eliminar_Usuario(decoded_payload['Id_Usuario'])
 
         else:
-            raise HTTPException(
-                status_code=404,
-                detail="Usuario o contraseña incorrectas",            
-                headers={"WWW-Authenticate": "Bearer"},)
+            Excepcion(404, "Usuario o contraseña incorrectas")
 
     except jwt.ExpiredSignatureError:
-        raise HTTPException(
-            status_code=401,
-            detail="El token ha expirado",
-            headers={"WWW-Authenticate": "Bearer"},)
+        Excepcion(401, "El token ha expirado")
 
     except jwt.InvalidTokenError:
-        raise HTTPException(
-            status_code=401,
-            detail="Token inválido",
-            headers={"WWW-Authenticate": "Bearer"},)
+        Excepcion(401, "Token inválido")
 
 #Eliminación de usuario ____________________________________________________________________________________________________________________________
 
-@app_de_FastApi.put("/Editar_Usuario", status_code=201)
-def Usuario_Editar(UserName:str, PassWord:str, acces_token, Email:str|None=None):
+@app_de_FastApi.put("/Editar_Usuario", status_code = 201)   ##########################################################
+async def Edit_User(Usuario : USUARIO_EMAIL, acces_token : str = Depends(esquema_oauth2)):
     try:
-        decoded_payload = jwt.decode(acces_token, Clave_Secreta, algorithms=['HS256'])
+        decoded_payload = jwt.decode(acces_token, Clave_Secreta, algorithms=algoritmo)
 
         if acces_token != None:
-            Editar_Usuario(decoded_payload['Id_Usuario'], UserName, PassWord, Email)
+            Editar_Usuario(decoded_payload['Id_Usuario'], Usuario.NOMBRE, Usuario.CONTRASEÑA, Usuario.EMAIL)
 
         else:
-            raise HTTPException(
-                status_code = 400,
-                detail="Cookie invalida",
-                headers={"WWW-Authenticate": "Bearer"},)
+            Excepcion(400, "Cookie invalida")
 
     except jwt.ExpiredSignatureError:
-        raise HTTPException(
-            status_code=401,
-            detail="El token ha expirado",
-            headers={"WWW-Authenticate": "Bearer"},)
+        Excepcion(401, "El token ha expirado")
 
     except jwt.InvalidTokenError:
-        raise HTTPException(
-            status_code=401,
-            detail="Token inválido",
-            headers={"WWW-Authenticate": "Bearer"},)
+        Excepcion(401, "Token inválido")
 
 #MercadoFree ____________________________________________________________________________________________________________________________
 
 @app_de_FastApi.get("/Productos")
-def Productos_Mostrar(acces_token:str|None=None):
+def Show_Products(acces_token:str|None=None):
     if acces_token == None:
-        raise HTTPException(
-            status_code = 400,
-            detail="Cookie invalida",
-            headers={"WWW-Authenticate": "Bearer"},)
+            Excepcion(400, "Cookie invalida")
+
     else:
         return Printear_Todos_los_Datos_del_DB()
 
-@app_de_FastApi.post("/Productos", status_code= 201)
-async def Producto_Ingresar(Nombre_Producto:str, Precio_Producto:int, Descripcion_Producto:str, acces_token:str|None=None):
+@app_de_FastApi.post("/Productos", status_code = 201, response_model = PRODUCTO_BASE)
+async def Product_Get_Into(Producto : PRODUCTO_BASE, acces_token:str):
     try:
-        decoded_payload = jwt.decode(acces_token, Clave_Secreta, algorithms=['HS256'])
-        print(f'Token decodificado: {decoded_payload}')
+        decoded_payload = jwt.decode(acces_token, Clave_Secreta, algorithms=algoritmo)
+
         if acces_token == None:
-            raise HTTPException(
-                status_code = 400,
-                detail="Cookie invalida",
-                headers={"WWW-Authenticate": "Bearer"},)
+            Excepcion(400, "Cookie invalida")
+            
         else:
-            Agreagar_Producto(Nombre_Producto,Precio_Producto,Descripcion_Producto, decoded_payload['Id_Usuario'])
+            Agreagar_Producto(Producto.NOMBRE, Producto.PRECIO, Producto.DESCRIPCION, decoded_payload['Id_Usuario'])
 
     except jwt.ExpiredSignatureError:
-        print('El token ha expirado')
-        raise HTTPException(
-            status_code=401,
-            detail="El token ha expirado",
-            headers={"WWW-Authenticate": "Bearer"},)
+        Excepcion(401, "El token ha expirado")
 
     except jwt.InvalidTokenError:
-        print('Token inválido')
-        raise HTTPException(
-            status_code=401,
-            detail="Token inválido",
-            headers={"WWW-Authenticate": "Bearer"},)
+        Excepcion(401, "Token inválido")
 
-@app_de_FastApi.delete("/Producto_Eliminar", status_code=204)
-async def Producto_Eliminar(ID:int, acces_token:str|None=None):
+@app_de_FastApi.delete("/Producto_Eliminar", status_code=204)   ##########################################################
+async def Product_Delet(ID : int, acces_token : str = Depends(esquema_oauth2)):
     if acces_token != None:
         try:
-            decoded_payload = jwt.decode(acces_token, Clave_Secreta, algorithms=['HS256'])
-            print(f'Token decodificado: {decoded_payload}')
-            Borrar_Producto(ID)
+            decoded_payload = jwt.decode(acces_token, Clave_Secreta, algorithms=algoritmo)
+            Borrar_Producto(ID, decoded_payload['Id_Usuario'])
 
         except jwt.ExpiredSignatureError:
-            raise HTTPException(
-                status_code=401,
-                detail="El token ha expirado",
-                headers={"WWW-Authenticate": "Bearer"},)
+            Excepcion(401, "El token ha expirado")
 
         except jwt.InvalidTokenError:
-            raise HTTPException(
-                status_code=401,
-                detail="Token inválido",
-                headers={"WWW-Authenticate": "Bearer"},)
+            Excepcion(401, "Token inválido")
+        
     else:
         raise HTTPException(
             status_code = 400,
-            detail="Cookie invalida",
-            headers={"WWW-Authenticate": "Bearer"},)
+            detail="Cookie invalida")
 
-@app_de_FastApi.put("/Editar_Producto")
-def Producto_Editar(ID, Nombre_Producto, Precio_Producto, Descripcion_Producto, acces_token):
+@app_de_FastApi.put("/Editar_Producto")   ##########################################################
+def Product_Editr(ID : int, Producto : PRODUCTO_BASE, acces_token : str = Depends(esquema_oauth2)):
     try:
-        decoded_payload = jwt.decode(acces_token, Clave_Secreta, algorithms=['HS256'])
+        decoded_payload = jwt.decode(acces_token, Clave_Secreta, algorithms=algoritmo)
         if acces_token == None:
-            raise HTTPException(
-                status_code = 400,
-                detail="Cookie invalida",
-                headers={"WWW-Authenticate": "Bearer"},)
+            Excepcion(400, "Cookie invalida")
+
         else:
-            Editar_Producto(ID, Nombre_Producto, Precio_Producto, Descripcion_Producto)
+            Editar_Producto(ID, Producto.NOMBRE, Producto.PRECIO, Producto.DESCRIPCION, decoded_payload['Id_Usuario'])
 
     except jwt.ExpiredSignatureError:
-        raise HTTPException(
-            status_code=401,
-            detail="El token ha expirado",
-            headers={"WWW-Authenticate": "Bearer"},)
+        Excepcion(401, "El token ha expirado")
 
     except jwt.InvalidTokenError:
-        raise HTTPException(
-            status_code=401,
-            detail="Token inválido",
-            headers={"WWW-Authenticate": "Bearer"},)
+            Excepcion(401, "Token inválido")
 
 @app_de_FastApi.get("/Lista_Buscador")
-def Buscar_Producto_en_DB(Buscar_Producto_s:str):
+def Search_Product_in_DB(Buscar_Producto_s:str):
     return Buscar_Producto(Buscar_Producto_s)
 
-@app_de_FastApi.get("/Producto")
-def Producto(ID:int):
+@app_de_FastApi.get("/Productos/{ID}") 
+def Product(ID : int):
     return Printear_un_Producto(ID)
 
 @app_de_FastApi.get("/MisProductos")
-def MisProductos(acces_token):
-    decoded_payload = jwt.decode(acces_token, Clave_Secreta, algorithms=['HS256'])
+def My_Products(acces_token):
+    decoded_payload = jwt.decode(acces_token, Clave_Secreta, algorithms=algoritmo)
     return Printear_Mis_Productos(decoded_payload['Id_Usuario'])
 
 @app_de_FastApi.post("/Carrito")
-def carrito(ID:int):
+def Cart(ID:int):
     lista_carrito.append(ID)
 
 @app_de_FastApi.get("/Carritototal")
-def Total_Carrito():
+def Total_Cart():
     total = 0
     for x in lista_carrito:
         P:str = Printear_un_Producto(x)
         total+=P[2]
     return f"{lista_carrito}", f"{total}"
+
+@app_de_FastApi.post("/Pagar")
+def Pay(Numero_Tarjeta : int, Tres_Digitos : int, acces_token):
+    try:
+        decoded_payload = jwt.decode(acces_token, Clave_Secreta, algorithms=algoritmo)
+
+        if acces_token != None:
+            total = 0
+            for x in lista_carrito:
+                P:str = Printear_un_Producto(x)
+                total+=P[2]
+            return f"El total pagado es {total}"
+        else:
+            Excepcion(400, "Cookie invalida")
+
+    except jwt.ExpiredSignatureError:
+        Excepcion(401, "El token ha expirado")
+
+    except jwt.InvalidTokenError:
+            Excepcion(401, "Token inválido")
