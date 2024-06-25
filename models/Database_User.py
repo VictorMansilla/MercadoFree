@@ -1,5 +1,8 @@
 import psycopg2
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 SQL_Tabla_de_Usuarios="CREATE TABLE IF NOT EXISTS USUARIOS (ID serial PRIMARY KEY, USUARIO_NOMBRE VARCHAR(30) NOT NULL, USUARIO_CONTRASEÑA VARCHAR(80) NOT NULL, EMAIL VARCHAR(30))"
 
