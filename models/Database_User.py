@@ -1,14 +1,21 @@
 import psycopg2
+import os
 
 SQL_Tabla_de_Usuarios="CREATE TABLE IF NOT EXISTS USUARIOS (ID serial PRIMARY KEY, USUARIO_NOMBRE VARCHAR(30) NOT NULL, USUARIO_CONTRASEÑA VARCHAR(80) NOT NULL, EMAIL VARCHAR(30))"
 
+DB_NAME = os.getenv('DB_NAME')
+DB_USER = os.getenv('DB_USER')
+DB_PASSWORD = os.getenv('DB_PASSWORD')
+DB_HOST = os.getenv('DB_HOST')
+DB_PORT = os.getenv('DB_PORT')
+
 class Coneaxion_a_Usuarios:
     def __init__(self):
-        self.conn = psycopg2.connect(dbname="Aprendizaje",
-                                     user="Soporte",
-                                     password="Soporte",
-                                     host="localhost",
-                                     port="5432")
+        self.conn = psycopg2.connect(DB_NAME,
+                                     DB_USER,
+                                     DB_PASSWORD,
+                                     DB_HOST,
+                                     DB_PORT)
         self.cursor = self.conn.cursor()
         self.cursor.execute(SQL_Tabla_de_Usuarios)
         self.conn.commit()
