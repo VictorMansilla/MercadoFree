@@ -95,8 +95,8 @@ def Show_Products(acces_token:str|None=None):
     else:
         return Printear_Todos_los_Datos_del_DB()
 
-@app_de_FastApi.post("/Productos", status_code = 201, response_model = PRODUCTO_BASE)
-async def Product_Get_Into(Producto : PRODUCTO_BASE, acces_token:str):
+@app_de_FastApi.post("/Productos", status_code = 201)   ##########################################################
+async def Product_Get_Into(Producto : PRODUCTO_BASE, acces_token : str = Depends(esquema_oauth2)):
     try:
         decoded_payload = jwt.decode(acces_token, Clave_Secreta, algorithms=algoritmo)
 
