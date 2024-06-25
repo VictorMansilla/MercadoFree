@@ -15,7 +15,7 @@ DB_PORT = os.getenv('DB_PORT')
 class Coneaxion_a_Usuarios:
     def __init__(self):
         self.conn = psycopg2.connect(DB_NAME,
-                                     DB_USER,
+                                     DB_USER,   
                                      DB_PASSWORD,
                                      DB_HOST,
                                      DB_PORT)

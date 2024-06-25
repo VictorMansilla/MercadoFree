@@ -1,14 +1,24 @@
 import psycopg2
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 SQL_Tabla_de_Productos="CREATE TABLE IF NOT EXISTS PRODUCTOS (ID serial PRIMARY KEY, PRODUCTO_NOMBRE VARCHAR(100) NOT NULL, PRECIO INTEGER NOT NULL, DESCRIPCION VARCHAR(500), PRODUCTO_USUARIO_ID INTEGER NOT NULL)"
 
+DB_NAME = os.getenv('DB_NAME')
+DB_USER = os.getenv('DB_USER')
+DB_PASSWORD = os.getenv('DB_PASSWORD')
+DB_HOST = os.getenv('DB_HOST')
+DB_PORT = os.getenv('DB_PORT')
+
 class Coneaxion_a_DB_Productos:
     def __init__(self):
-        self.conn = psycopg2.connect(dbname="Aprendizaje",
-                                     user="Soporte",
-                                     password="Soporte",
-                                     host="localhost",
-                                     port="5432")
+        self.conn = psycopg2.connect(DB_NAME,
+                                     DB_USER,   
+                                     DB_PASSWORD,
+                                     DB_HOST,
+                                     DB_PORT)
         self.cursor = self.conn.cursor()
         self.cursor.execute(SQL_Tabla_de_Productos)
         self.conn.commit()
