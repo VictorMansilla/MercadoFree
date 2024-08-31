@@ -5,12 +5,8 @@ SQL_Tabla_de_Productos="CREATE TABLE IF NOT EXISTS PRODUCTOS (ID serial PRIMARY 
 
 class Coneaxion_a_DB_Productos:
     def __init__(self):
-        self.conn = psycopg2.connect(
-            dbname=os.getenv("DB_NAME"),
-            user=os.getenv("DB_USER"),
-            password=os.getenv("DB_PASSWORD"),
-            host=os.getenv("DB_HOST"),
-            port=os.getenv("DB_PORT"))
+        self.conn = psycopg2.connect()
+            #dbname=os.getenv("DB_NAME"), user=os.getenv("DB_USER"), password=os.getenv("DB_PASSWORD"), host=os.getenv("DB_HOST"), port=os.getenv("DB_PORT"))
         self.cursor = self.conn.cursor()
         self.cursor.execute(SQL_Tabla_de_Productos)
         self.conn.commit()

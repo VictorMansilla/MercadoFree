@@ -4,7 +4,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 from models.Database_Product import Printear_Todos_los_Datos_del_DB, Printear_un_Producto, Agreagar_Producto, Borrar_Producto, Editar_Producto, Buscar_Producto, Printear_Mis_Productos
 from models.Database_User import  Agreagar_Usuario, Validar_Usuario, Editar_Usuario, Eliminar_Usuario
-from api.encode import Token,second_exp,Clave_Secreta, algoritmo
+from tokenjwt.encode import Token,second_exp,Clave_Secreta, algoritmo
 from schemas.USUARIO import USUARIO_BASE, USUARIO_EMAIL
 from schemas.PRODUCTO import PRODUCTO_BASE
 
@@ -95,6 +95,8 @@ def Show_Products(acces_token:str|None=None):
     else:
         return Printear_Todos_los_Datos_del_DB()
 
+
+
 @app_de_FastApi.post("/Productos", status_code = 201)   ##########################################################
 async def Product_Get_Into(Producto : PRODUCTO_BASE, acces_token : str = Depends(esquema_oauth2)):
     try:
@@ -111,6 +113,8 @@ async def Product_Get_Into(Producto : PRODUCTO_BASE, acces_token : str = Depends
 
     except jwt.InvalidTokenError:
         Excepcion(401, "Token inválido")
+
+
 
 @app_de_FastApi.delete("/Producto_Eliminar", status_code=204)   ##########################################################
 async def Product_Delet(ID : int, acces_token : str = Depends(esquema_oauth2)):
@@ -130,6 +134,8 @@ async def Product_Delet(ID : int, acces_token : str = Depends(esquema_oauth2)):
             status_code = 400,
             detail="Cookie invalida")
 
+
+
 @app_de_FastApi.put("/Editar_Producto")   ##########################################################
 def Product_Editr(ID : int, Producto : PRODUCTO_BASE, acces_token : str = Depends(esquema_oauth2)):
     try:
@@ -146,22 +152,32 @@ def Product_Editr(ID : int, Producto : PRODUCTO_BASE, acces_token : str = Depend
     except jwt.InvalidTokenError:
             Excepcion(401, "Token inválido")
 
+
+
 @app_de_FastApi.get("/Lista_Buscador")
 def Search_Product_in_DB(Buscar_Producto_s:str):
     return Buscar_Producto(Buscar_Producto_s)
 
+
+
 @app_de_FastApi.get("/Productos/{ID}") 
 def Product(ID : int):
     return Printear_un_Producto(ID)
+
+
 
 @app_de_FastApi.get("/MisProductos")
 def My_Products(acces_token):
     decoded_payload = jwt.decode(acces_token, Clave_Secreta, algorithms=algoritmo)
     return Printear_Mis_Productos(decoded_payload['Id_Usuario'])
 
+
+
 @app_de_FastApi.post("/Carrito")
 def Cart(ID:int):
     lista_carrito.append(ID)
+
+
 
 @app_de_FastApi.get("/Carritototal")
 def Total_Cart():
@@ -170,6 +186,8 @@ def Total_Cart():
         P:str = Printear_un_Producto(x)
         total+=P[2]
     return f"{lista_carrito}", f"{total}"
+
+
 
 @app_de_FastApi.post("/Pagar")
 def Pay(Numero_Tarjeta : int, Tres_Digitos : int, acces_token):
