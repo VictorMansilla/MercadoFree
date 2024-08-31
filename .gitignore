@@ -1,5 +1,5 @@
 .env
-ent/
+/ent/
 /__pycache__/
 /models/__pycache__/
 /schemas/__pycache__/
